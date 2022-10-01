@@ -1,0 +1,151 @@
+<html>
+    <head>
+        <title>
+            NODECHAT
+        </title>
+        <style>
+            #contentWrap{
+                display: none;
+            }
+            #chatWrap{
+                float: left;
+            }
+            #chat{
+                position: relative;
+                width: 100%;
+                float:left;
+                min-height:100px;
+                height: 90%;
+                overflow: auto;
+            }
+        </style>
+        
+        <script src="https://code.jquery.com/jquery.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+
+        <!-- CSS only -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+
+        <!-- JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8" crossorigin="anonymous"></script>
+        <!-- Latest compiled and minified CSS -->
+        <!--<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+        -->
+        <!-- Optional theme -->
+        <!--<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap-theme.min.css">
+        -->
+            <!-- Latest compiled and minified JavaScript -->
+        <!--<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+        -->
+    </head>
+    <body>
+    
+        <div class="container">
+        
+            <div class="page-header">
+                <h1>Chat Ranchero</h1>
+                <h6>
+                    Desarrollado por: Jesus, Ian, Fernando, Adan
+                </h5>
+            </div>
+            
+            <div class="input-group input-group-sm mb-3" style="width:300px;text-align:center;margin:0 auto;" id="nickWrap">
+                <input id="nickname" class="form-control" type="text" placeholder="Nombre de usuario">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-primary" type="submit" id="setNick">Okay</button>
+                </span>
+            </div>
+            <div class="alert fade in alert-danger alert-dismissable" data-dismiss="alert" id="login-error" style="display:none;">
+                <button type="button" class="close" id="closeAlert">×</button>
+                Este usuario ya fue tomado, calale con otro o que
+            </div>
+            
+            <div id="contentWrap" class="row" 
+                style="
+                    height: 70%;
+                    border-radius: 20px;
+                    padding: 2px;
+                    ">
+                <div class="col-md-2"></div>
+                <div id="chatWrap"  class="col-md-6">
+                    <div class="panel panel-success">
+                        <div class="panel-heading">
+                            <h2>Chat</h2>
+                        </div>
+                        <div id="chat" class="panel-body"></div>
+                    </div>
+                </div>
+                <div style="margin-top: 60px;">
+                    <form id="send-message" class="input-group" style="text-align:center;margin:0 auto;">
+                    <input id="message" class="form-control input-lg" type="text">
+                    <span class="input-group-btn">
+                        <button class="btn btn-lg btn-primary" type="submit">Enviar</button>
+                    </span>
+                    </form>
+                </div>
+                
+                
+                <div class="col-md-2" style="margin-top: 10px;">
+                    <h6>Conectado:</h6>
+                    <div class="panel panel-info">
+                        <div id="users" class="panel-body"></div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        <script>
+            jQuery(function($) {
+               var socket = io.connect();
+               var $messageForm = $('#send-message');
+               var $messageBox = $('#message');
+               var $chat = $('#chat');
+               var $buttonSend = $('#send');
+               
+               var $nickForm = $('#setNick');
+               var $nickBox = $('#nickname');
+               var $users = $('#users');
+               var $closeAlert = $('#closeAlert');
+               
+               
+               
+               $nickForm.click(function(e) {
+                   e.preventDefault();
+                   socket.emit('new user', $nickBox.val(), function(data) {
+                       if(data) {
+                           $('#nickWrap').hide();
+                           $('#contentWrap').show();
+                       } else {
+                           $("#login-error").show();
+                       }
+                   });
+                   $nickBox.val('');
+               });
+               
+               $closeAlert.click(function(e) {
+                    $("#login-error").hide();
+               });
+               
+               $messageForm.submit(function(e) {
+                   e.preventDefault();
+                   if($messageBox.val()!='') socket.emit('send message', $messageBox.val());
+                   $messageBox.val('');
+               });
+               
+               socket.on('new message', function(data) {
+                  $chat.append('<b>'+data.nick+":</b> "+data.msg+"<br/>"); 
+               });
+               
+               socket.on('usernames', function(data) {
+                    var html = '';
+                    for (var username in data) {
+                        html += username + '<br/>';
+                    }
+                    $users.html(html);
+                });
+               
+            });
+            
+        </script>
+    </body>
+</html>
